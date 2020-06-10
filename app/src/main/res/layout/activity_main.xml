@@ -12,12 +12,17 @@
         android:id="@+id/tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="TextView_Ioc" />
+        android:text="Activity_TextView_Ioc" />
 
     <Button
         android:id="@+id/btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Button_Ioc" />
+        android:text="Activity_Button_Ioc" />
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/container"
+        android:orientation="vertical" />
 </LinearLayout>

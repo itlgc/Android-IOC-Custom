@@ -15,70 +15,56 @@ import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
 
-import androidx.fragment.app.Fragment;
-
 
 /**
  * 注入管理类
  * Created by lgc on 2020-02-16.
  */
-public class InjectManager {
+public class InjectManagerSimple {
 
     public static void inject(Activity activity) {
-        inject(activity.getClass(),activity);
-    }
-
-    public static void inject(Fragment fragment) {
-        inject(fragment.getClass(),fragment);
-    }
-
-    private static void inject(Class<?> clazz, Object object) {
         //布局的注入
         try {
-            injectLayout(clazz,object);
+            injectLayout(activity);
         } catch (Exception e) {
             e.printStackTrace();
         }
         //控件的注入
         try {
-            injectViews(clazz,object);
+            injectViews(activity);
         } catch (Exception e) {
             e.printStackTrace();
         }
         //事件的注入
         try {
-            injectEvents(clazz,object);
+            injectEvents(activity);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-
-
     /**
      * 布局的注入
      */
-    private static void injectLayout(Class<?> clazz,Object object) throws Exception {
-        if (object instanceof Activity) {
-            //获取类之上的注解
-            ContentView contentView = clazz.getAnnotation(ContentView.class);
-            if (contentView != null) {
-                //获取注解的值,也就是布局id
-                int layoutId = contentView.value();
+    private static void injectLayout(Activity activity) throws Exception {
+        Class<? extends Activity> clazz = activity.getClass();
+        //获取类之上的注解
+        ContentView contentView = clazz.getAnnotation(ContentView.class);
+        if (contentView != null) {
+            //获取注解的值,也就是布局id
+            int layoutId = contentView.value();
 
-                //执行setContentView方法
-                Method setContentViewMethod = clazz.getMethod("setContentView", int.class);
-                setContentViewMethod.invoke(object, layoutId);
-            }
+            //执行setContentView方法
+            Method setContentViewMethod = clazz.getMethod("setContentView", int.class);
+            setContentViewMethod.invoke(activity, layoutId);
         }
-
-
     }
 
     /**
      * 控件的注入
      */
-    private static void injectViews(Class<?> clazz,Object object) throws Exception {
+    private static void injectViews(Activity activity) throws Exception {
+        Class<? extends Activity> clazz = activity.getClass();
         //获取该类所有属性
         Field[] fields = clazz.getDeclaredFields();
         //循环 获取属性上的注解
@@ -87,17 +73,12 @@ public class InjectManager {
             if (injectView != null) {
                 int viewId = injectView.value();
 
-                Object view;
-                if (object instanceof Fragment) {
-                    view = ((Fragment) object).getActivity().findViewById(viewId);
-                }else {
-                    Method findViewByIdMethod = clazz.getMethod("findViewById", int.class);
-                    view = findViewByIdMethod.invoke(object, viewId);
-                }
+                Method findViewByIdMethod = clazz.getMethod("findViewById", int.class);
+                Object view = findViewByIdMethod.invoke(activity, viewId);
 
                 //赋值 属性的值赋值给控件 在当前的Activity
                 field.setAccessible(true);
-                field.set(object, view);
+                field.set(activity, view);
             }
         }
     }
@@ -105,7 +86,8 @@ public class InjectManager {
     /**
      * 事件的注入
      */
-    private static void injectEvents(Class<?> clazz,Object object) throws Exception {
+    private static void injectEvents(Activity activity) throws Exception {
+        Class<? extends Activity> clazz = activity.getClass();
         //获取类的所有方法
         Method[] methods = clazz.getDeclaredMethods();
         for (Method method : methods) {
@@ -133,7 +115,7 @@ public class InjectManager {
 
                         //动态代理
                         ListenerInvocationHandler invocationHandler =
-                                new ListenerInvocationHandler(object);
+                                new ListenerInvocationHandler(activity);
                         invocationHandler.addMethods(callbackListener, method);
 
                         Object listener = Proxy.newProxyInstance(listenerType.getClassLoader(),
@@ -141,16 +123,8 @@ public class InjectManager {
 
                         for (int viewId : ViewsId) {
                             //获取当前activity中View控件 并赋值
-                            Object view;
-                            if (object instanceof Fragment){
-                                view = ((Fragment) object).getActivity().findViewById(viewId);
-                            }else {
-//                                View view = object.findViewById(viewId);
-                                Method findViewByIdMethod = clazz.getMethod("findViewById", int.class);
-                                view = findViewByIdMethod.invoke(object, viewId);
+                            View view = activity.findViewById(viewId);
 
-                            }
-//
                             //这样才能兼容 setxxxClicklister  setxxxLongClickLister等
                             Method setter = view.getClass().getMethod(listenerSetter, listenerType);
                             setter.invoke(view, listener);

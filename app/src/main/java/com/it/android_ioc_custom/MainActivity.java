@@ -1,17 +1,16 @@
 package com.it.android_ioc_custom;
 
-
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.it.ioc_library.annotation.ContentView;
 import com.it.ioc_library.annotation.InjectView;
 import com.it.ioc_library.annotation.OnClick;
 import com.it.ioc_library.annotation.OnLongClick;
+import androidx.fragment.app.FragmentTransaction;
 
 /**
  * 自定义实现 IOC 注入框架设计
@@ -32,6 +31,9 @@ public class MainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         //setContentView(R.layout.activity_main);
         Log.e("TAG:", "布局注入生效了");
+
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        transaction.add(R.id.container, new TestFragment()).commit();
     }
 
     @Override
@@ -59,6 +61,4 @@ public class MainActivity extends BaseActivity {
     public void longClickEvent() {
         Toast.makeText(getApplicationContext(),"长按事件注入生效了", Toast.LENGTH_SHORT).show();
     }
-
-
 }

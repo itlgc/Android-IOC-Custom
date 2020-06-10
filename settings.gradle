@@ -1,0 +1,2 @@
+include ':app', ':ioc_library'
+rootProject.name='Android-IOC-Custom'
